@@ -6,7 +6,7 @@ TOTAL_SQUARES = 64
 
 State = enum.Enum(
     value="ApplicationState",
-    names=("start", "user_move", "select_attack")
+    names=("start", "user_move", "select_attack", "move_process")
 )
 
 # TODO: Move to main function
@@ -67,6 +67,10 @@ def debug_update_board():
             debug_board_unstable[chess.parse_square(parts[4])] = 1
 
 
+def debug_attack_pick() -> list[chess.Square]:
+    return list(map(lambda x: chess.parse_square(x), input("Enter list of changed squares:").split(" ")))
+
+
 def is_good_start_position(mask: list[int]) -> bool:
     for i in range(TOTAL_SQUARES):
         if 16 <= i < 48 and mask[i] or not 16 <= i < 48 and not mask[i]:
@@ -83,7 +87,7 @@ def get_changed_squares(mask: list[int], mask_prev: list[int]) -> list[chess.Squ
     return [chess.Square(i) for i in filter(lambda i: mask[i] != mask_prev[i], range(TOTAL_SQUARES))]
 
 
-def get_chess_move_if_any(mask: list[int], changed_squares: list[chess.Square]) \
+def get_chess_move_or_attack_list(mask: list[int], changed_squares: list[chess.Square]) \
         -> chess.Move | list[chess.Square] | None:
     match len(changed_squares):
         case 1:
@@ -133,6 +137,7 @@ def get_chess_move_if_any(mask: list[int], changed_squares: list[chess.Square]) 
 
 def main():
     global debug_board
+    move_selected = False
 
     mask, mask_prev = init_masks()
     state = State.start
@@ -152,20 +157,49 @@ def main():
                     update_mask(mask)
                     changed_squares = get_changed_squares(mask, mask_prev)
                     print(changed_squares)
-                    move = get_chess_move_if_any(mask, changed_squares)
-                    if type(move) is list[chess.Square]:
+                    move_or_attack_list = get_chess_move_or_attack_list(mask, changed_squares)
+                    if isinstance(move_or_attack_list, list):
+                        attack_mask = mask.copy()
+                        attack_source = changed_squares[0]
+                        attacks = move_or_attack_list
+                        print(f"{attack_source} -> {attacks}")
                         state = State.select_attack
-                    elif move and move in board.legal_moves:
-                        board.push(move)
-                        debug_board = debug_board_unstable.copy()
-                        mask_prev = mask.copy()
                     else:
-                        print(f"{move} is invalid")
+                        move = move_or_attack_list
+                        if move and move in board.legal_moves:
+                            board.push(move)
+                            debug_board = debug_board_unstable.copy()
+                            mask_prev = mask.copy()
+                        else:
+                            print(f"{move} is invalid")
 
             case State.select_attack:
-                attacks = move
-                print(attacks)
-                break
+                if not move_selected:
+                    print("Pick up the moved piece and press the move button")
+                    if is_move_button_pressed():
+                        update_mask(mask)
+                        # On real board
+                        # changed_squares = get_changed_squares(mask, mask_prev)
+                        changed_squares = debug_attack_pick()
+                        if len(changed_squares) == 1 and changed_squares[0] in attacks:
+                            move = chess.Move(attack_source, changed_squares[0])
+                            move_selected = True
+                else:
+                    print("Put down the moved piece and press the move button")
+                    if is_move_button_pressed():
+                        update_mask(mask)
+                        if mask == attack_mask:
+                            move_selected = False
+                            state = State.move_process
+
+            case State.move_process:
+                if move and move in board.legal_moves:
+                    board.push(move)
+                    debug_board = debug_board_unstable.copy()
+                    mask_prev = mask.copy()
+                else:
+                    print(f"{move} is invalid")
+                state = State.user_move
 
 
 if __name__ == "__main__":
