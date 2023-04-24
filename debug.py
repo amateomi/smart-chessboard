@@ -1,11 +1,19 @@
 import chess
 
-board = [1] * 16 + [0] * 32 + [1] * 16
+import hardware_interaction as hw
+
+board = [1] * 16 + [0] * 32 + [1] * 16  # Used to emulate reading from MUX
 
 
-def update_board(board_to_draw: chess.Board, mask_stable: list[int]):
+def reset_board():
     global board
-    board = mask_stable.copy()
+    board = [1] * 16 + [0] * 32 + [1] * 16
+
+
+def update_board(board_to_draw: chess.Board):
+    """ Emulates the movement of pieces on the board """
+    global board
+    board = hw.mask_stable.copy()
     for r in range(7, -1, -1):
         print(f"\n{r + 1}", end=" ")
         for f in range(8):
@@ -32,4 +40,5 @@ def update_board(board_to_draw: chess.Board, mask_stable: list[int]):
 
 
 def pick_attacks() -> list[chess.Square]:
+    """ Used in state.select_attack to emulate actual player actions on the board """
     return list(map(lambda x: chess.parse_square(x), input("Enter list of changed squares:").split(" ")))
