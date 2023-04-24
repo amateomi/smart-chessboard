@@ -1,7 +1,9 @@
-import enum
+from enum import Enum
 
 import chess
 import chess.engine
+
+import debug
 
 TOTAL_SQUARES = 64
 
@@ -43,8 +45,6 @@ pawn_promotion_index = 0
 # TODO: Move to main function
 board = chess.Board()
 
-debug_board_unstable = None
-
 
 def init_masks() -> (list[int], list[int]):
     """ Represent current reed switch states
@@ -58,7 +58,7 @@ def init_masks() -> (list[int], list[int]):
 def update_mask(mask: list[int]):
     # TODO: Read from MUX
     for i in range(TOTAL_SQUARES):
-        mask[i] = debug_board_unstable[i]
+        mask[i] = debug.board[i]
 
 
 def is_start_button_pressed() -> bool:
@@ -67,38 +67,6 @@ def is_start_button_pressed() -> bool:
         return True
     else:
         return False
-
-
-def debug_update_board(mask_stable: list[int]):
-    global debug_board_unstable
-    debug_board_unstable = mask_stable.copy()
-    for r in range(7, -1, -1):
-        print(f"\n{r + 1}", end=" ")
-        for f in range(8):
-            piece = board.piece_at(chess.square(f, r))
-            print(f"{piece if piece else '-'}", end=" ")
-    print(f"\n  {' '.join(chess.FILE_NAMES)}")
-    move = input("Enter move (a|m|e|c <source> <target> <enemy pawn spot>|<rook spot> <new rook spot>):")
-    parts = move.split(" ")
-    match parts[0]:
-        case "a":
-            debug_board_unstable[chess.parse_square(parts[1])] = 0
-        case "m":
-            debug_board_unstable[chess.parse_square(parts[1])] = 0
-            debug_board_unstable[chess.parse_square(parts[2])] = 1
-        case "e":
-            debug_board_unstable[chess.parse_square(parts[1])] = 0
-            debug_board_unstable[chess.parse_square(parts[2])] = 1
-            debug_board_unstable[chess.parse_square(parts[3])] = 0
-        case "c":
-            debug_board_unstable[chess.parse_square(parts[1])] = 0
-            debug_board_unstable[chess.parse_square(parts[2])] = 1
-            debug_board_unstable[chess.parse_square(parts[3])] = 0
-            debug_board_unstable[chess.parse_square(parts[4])] = 1
-
-
-def debug_attack_pick() -> list[chess.Square]:
-    return list(map(lambda x: chess.parse_square(x), input("Enter list of changed squares:").split(" ")))
 
 
 def is_good_start_position(mask: list[int]) -> bool:
@@ -177,15 +145,18 @@ def get_chess_move_or_attack_list(mask: list[int], changed_squares: list[chess.S
     return None
 
 
-def main():
-    state = enum.Enum(
-        value="ApplicationState",
-        names=("start", "user_move", "ai_move", "select_attack", "move_process", "pawn_promotion", "game_over_check")
-    )
-    state = state.start
+class State(Enum):
+    START = 1
+    USER_MOVE = 2
+    AI_MOVE = 3
+    SELECT_ATTACK = 4
+    MOVE_PROCESS = 5
+    PAWN_PROMOTION = 6
+    GAME_OVER_CHECK = 7
 
-    # global debug_board
-    global debug_board_unstable
+
+def main():
+    state = State.START
 
     global pawn_promotion_index
 
@@ -200,18 +171,17 @@ def main():
     engine = chess.engine.SimpleEngine.popen_uci("/usr/games/stockfish")
 
     mask, mask_stable = init_masks()
-    debug_board_unstable = [1] * 16 + [0] * 32 + [1] * 16
     while True:
         match state:
-            case state.start:
+            case State.START:
                 if is_start_button_pressed():
                     update_mask(mask)
                 if is_good_start_position(mask):
                     mask_stable = mask.copy()
-                    state = state.user_move
+                    state = State.USER_MOVE
 
-            case state.user_move:
-                debug_update_board(mask_stable)
+            case State.USER_MOVE:
+                debug.update_board(board, mask_stable)
 
                 if is_move_button_pressed():
                     update_mask(mask)
@@ -223,38 +193,37 @@ def main():
                         attack_source = changed_squares[0]
                         attack_mask = mask.copy()
                         print(f"{attack_source} -> {attacks}")
-                        state = state.select_attack
+                        state = State.SELECT_ATTACK
                     else:
                         move = move_or_attack_list
-                        state = state.move_process
+                        state = State.MOVE_PROCESS
 
-            case state.ai_move:
+            case State.AI_MOVE:
                 if not is_ai_made_move:
                     engine_response = engine.play(board, chess.engine.Limit(time=0.5))
-                    # TODO
-                    # move = engine_response.move
-                    move = chess.Move.from_uci(input("Enter ai move:"))
+                    move = engine_response.move
+                    # move = chess.Move.from_uci(input("Enter ai move:"))
                     board.push(move)
                     right_mask = [1 if board.piece_at(i) else 0 for i in range(TOTAL_SQUARES)]
                     board.pop()
                     is_ai_made_move = True
                 else:
                     print(f"Make move {move} and press move button")
-                    debug_update_board(mask_stable)
+                    debug.update_board(board, mask_stable)
                     if is_move_button_pressed():
                         update_mask(mask)
                         if mask == right_mask:
                             is_ai_made_move = False
-                            state = state.move_process
+                            state = State.MOVE_PROCESS
 
-            case state.select_attack:
+            case State.SELECT_ATTACK:
                 if not move_selected:
                     print("Pick up moved piece and press the move button")
                     if is_move_button_pressed():
                         update_mask(mask)
                         # On real board
                         # changed_squares = get_changed_squares(mask, mask_stable)
-                        changed_squares = debug_attack_pick()
+                        changed_squares = debug.pick_attacks()
                         if len(changed_squares) == 1 and changed_squares[0] in attacks:
                             move = chess.Move(attack_source, changed_squares[0])
                             move_selected = True
@@ -264,9 +233,9 @@ def main():
                         update_mask(mask)
                         if mask == attack_mask:
                             move_selected = False
-                            state = state.move_process
+                            state = State.MOVE_PROCESS
 
-            case state.move_process:
+            case State.MOVE_PROCESS:
                 if move in PAWN_PROMOTION_MOVES:  # Only user can make move from PAWN_PROMOTION_MOVES
                     move.promotion = chess.QUEEN  # Reason: board.legal_moves not contain PAWN_PROMOTION_MOVES
                     is_valid_promotion = move in board.legal_moves
@@ -275,37 +244,37 @@ def main():
                         state = state.pawn_promotion
                     else:
                         print(f"{move} is invalid promotion")
-                        state = state.user_move
+                        state = State.USER_MOVE
                 elif move in board.legal_moves:
                     board.push(move)
                     mask_stable = mask.copy()
-                    state = state.game_over_check
+                    state = State.GAME_OVER_CHECK
                 else:
                     print(f"{move} is invalid move")
                     if board.turn == chess.BLACK:
                         raise "Chess engine made invalid move"
-                    state = state.user_move
+                    state = State.USER_MOVE
 
-            case state.pawn_promotion:
+            case State.PAWN_PROMOTION:
                 print(f"Select piece {PAWN_PROMOTION_OPTIONS[pawn_promotion_index]}?")
                 if is_select_button_pressed():
                     move.promotion = PAWN_PROMOTION_CHARACTERS[pawn_promotion_index]
-                    state = state.move_process
+                    state = State.MOVE_PROCESS
                 elif is_left_button_pressed() and pawn_promotion_index > 0:
                     pawn_promotion_index -= 1
                 elif is_right_button_pressed() and pawn_promotion_index < len(PAWN_PROMOTION_OPTIONS) - 1:
                     pawn_promotion_index += 1
 
-            case state.game_over_check:
+            case State.GAME_OVER_CHECK:
                 if board.is_game_over():
                     print("Game over")
                     board.reset()
-                    debug_board_unstable = mask_stable.copy()
-                    state = state.start
+                    debug.board = mask_stable.copy()
+                    state = State.START
                 elif board.turn == chess.WHITE:
-                    state = state.user_move
+                    state = State.USER_MOVE
                 else:
-                    state = state.ai_move
+                    state = State.AI_MOVE
 
 
 if __name__ == "__main__":
