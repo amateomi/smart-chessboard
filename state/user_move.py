@@ -27,7 +27,7 @@ def user_move(board: chess.Board) -> tuple[State, chess.Move, CaptureInfo]:
 
 
 def get_move_or_attacked_squares(board: chess.Board, changed_squares: list[chess.Square]) \
-        -> chess.Move | list[chess.Square]:
+        -> chess.Move:
     """ Attempts to determine the player's move based on the number of squares changed since the last mask_update.
         One changed square means that one piece captured another and stood on its square.
         Two changed squares mean the usual movement of a piece to another square.
