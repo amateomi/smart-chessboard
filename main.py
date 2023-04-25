@@ -16,27 +16,26 @@ def main():
     board = chess.Board()
     state = State.START
     while True:
-        match state:
-            case State.START:
-                state = start()
+        if state == State.START:
+            state = start()
 
-            case State.USER_MOVE:
-                state, move, capture_info = user_move(board)
+        elif state == State.USER_MOVE:
+            state, move, capture_info = user_move(board)
 
-            case State.AI_MOVE:
-                state, move = ai_move(board)
+        elif state == State.AI_MOVE:
+            state, move = ai_move(board)
 
-            case State.SELECT_CAPTURE:
-                state, move = select_capture(capture_info)
+        elif state == State.SELECT_CAPTURE:
+            state, move = select_capture(capture_info)
 
-            case State.MOVE_PROCESS:
-                state = move_process(board, move)
+        elif state == State.MOVE_PROCESS:
+            state = move_process(board, move)
 
-            case State.PAWN_PROMOTION:
-                state, move = pawn_promotion(move)
+        elif state == State.PAWN_PROMOTION:
+            state, move = pawn_promotion(move)
 
-            case State.GAME_OVER_CHECK:
-                state = game_over_check(board)
+        elif state == State.GAME_OVER_CHECK:
+            state = game_over_check(board)
 
 
 if __name__ == "__main__":
