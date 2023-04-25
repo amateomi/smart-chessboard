@@ -34,36 +34,36 @@ def get_move_or_attacked_squares(board: chess.Board, changed_squares: list[chess
         Three changed squares mean en passant.
         Four changed squares mean castling.
         Any other amount of changed squares are invalid. """
-    match len(changed_squares):
-        case 1:  # Capture: source 1 -> 0
-            source_square = changed_squares[0]
-            if is_empty_square(source_square):
-                attacked_squares = [s for s in board.attacks(source_square) if is_enemy_piece(board, s)]
-                if len(attacked_squares) == 1:
-                    target_square = attacked_squares[0]
-                    return chess.Move(source_square, target_square)
-                elif len(attacked_squares) > 1:
-                    return attacked_squares
-
-        case 2:  # Move: source 1 -> 0, target 0 -> 1
-            if is_first_empty_and_second_not_empty(changed_squares[0], changed_squares[1]):
-                return chess.Move(changed_squares[0], changed_squares[1])
-            elif is_first_empty_and_second_not_empty(changed_squares[1], changed_squares[0]):
-                return chess.Move(changed_squares[1], changed_squares[0])
-
-        case 3:  # En Passant: source 1 -> 0, target 0 -> 1, enemy pawn square 1 -> 0
-            target_square = get_not_empty_square(changed_squares)
-            if target_square:
-                for square in changed_squares:
-                    move = chess.Move(square, target_square)
-                    if board.is_en_passant(move):
-                        return move
-
-        case 4:  # Castling: source 1 -> 0, target 0 -> 1, rook square 1 -> 0, new rook square 0 -> 1
-            source_square = get_king_square(board, changed_squares)
-            target_square = get_king_square_after_castling(changed_squares)
-            if source_square and target_square:
+    changes = len(changed_squares)
+    if changes == 1:
+        source_square = changed_squares[0]
+        if is_empty_square(source_square):
+            attacked_squares = [s for s in board.attacks(source_square) if is_enemy_piece(board, s)]
+            if len(attacked_squares) == 1:
+                target_square = attacked_squares[0]
                 return chess.Move(source_square, target_square)
+            elif len(attacked_squares) > 1:
+                return attacked_squares
+
+    elif changes == 2:  # Move: source 1 -> 0, target 0 -> 1
+        if is_first_empty_and_second_not_empty(changed_squares[0], changed_squares[1]):
+            return chess.Move(changed_squares[0], changed_squares[1])
+        elif is_first_empty_and_second_not_empty(changed_squares[1], changed_squares[0]):
+            return chess.Move(changed_squares[1], changed_squares[0])
+
+    elif changes == 3:  # En Passant: source 1 -> 0, target 0 -> 1, enemy pawn square 1 -> 0
+        target_square = get_not_empty_square(changed_squares)
+        if target_square:
+            for square in changed_squares:
+                move = chess.Move(square, target_square)
+                if board.is_en_passant(move):
+                    return move
+
+    elif changes == 4:  # Castling: source 1 -> 0, target 0 -> 1, rook square 1 -> 0, new rook square 0 -> 1
+        source_square = get_king_square(board, changed_squares)
+        target_square = get_king_square_after_castling(changed_squares)
+        if source_square and target_square:
+            return chess.Move(source_square, target_square)
     return None
 
 
