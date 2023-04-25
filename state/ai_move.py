@@ -10,14 +10,14 @@ is_ai_made_move = False
 
 # AI board mask. The player must repeat the move of the engine
 # so that the mask after moving the pieces coincides with the AI mask
-target_mask: list[int] | None = None
+target_mask: list[int] = None
 
 engine = chess.engine.SimpleEngine.popen_uci("/usr/games/stockfish")
 
-engine_move: chess.Move | None = None
+engine_move: chess.Move = None
 
 
-def ai_move(board: chess.Board) -> tuple[State, chess.Move | None]:
+def ai_move(board: chess.Board) -> tuple[State, chess.Move]:
     global is_ai_made_move
     global engine_move
     if not is_ai_made_move:

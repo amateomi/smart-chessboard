@@ -16,10 +16,10 @@ class CaptureInfo:
 
 is_target_selected = False
 
-move: chess.Move | None = None
+move: chess.Move = None
 
 
-def select_capture(capture_info: CaptureInfo) -> tuple[State, chess.Move | None]:
+def select_capture(capture_info: CaptureInfo) -> tuple[State, chess.Move]:
     global is_target_selected
     global move
     if not is_target_selected:
@@ -44,5 +44,5 @@ def select_capture(capture_info: CaptureInfo) -> tuple[State, chess.Move | None]
     return State.SELECT_CAPTURE, None
 
 
-def get_target_square(squares: list[chess.Square], capture_info: CaptureInfo) -> chess.Square | None:
+def get_target_square(squares: list[chess.Square], capture_info: CaptureInfo) -> chess.Square:
     return squares[0] if len(squares) == 1 and squares[0] in capture_info.attacked_squares else None

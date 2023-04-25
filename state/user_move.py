@@ -7,7 +7,7 @@ from state.select_capture import CaptureInfo
 from state.state_machine import State
 
 
-def user_move(board: chess.Board) -> tuple[State, chess.Move | None, CaptureInfo | None]:
+def user_move(board: chess.Board) -> tuple[State, chess.Move, CaptureInfo]:
     debug.update_board(board)
     if hw.is_move_button_pressed():
         hw.update_mask()
@@ -27,7 +27,7 @@ def user_move(board: chess.Board) -> tuple[State, chess.Move | None, CaptureInfo
 
 
 def get_move_or_attacked_squares(board: chess.Board, changed_squares: list[chess.Square]) \
-        -> chess.Move | list[chess.Square] | None:
+        -> chess.Move | list[chess.Square]:
     """ Attempts to determine the player's move based on the number of squares changed since the last mask_update.
         One changed square means that one piece captured another and stood on its square.
         Two changed squares mean the usual movement of a piece to another square.
@@ -79,16 +79,16 @@ def is_first_empty_and_second_not_empty(first: chess.Square, second: chess.Squar
     return hw.mask[first] == 0 and hw.mask[second] != 0
 
 
-def get_not_empty_square(squares: list[chess.Square]) -> chess.Square | None:
+def get_not_empty_square(squares: list[chess.Square]) -> chess.Square:
     result = [square for square in squares if hw.mask[square] == 1]
     return result[0] if len(result) == 1 else None
 
 
-def get_king_square(board: chess.Board, squares: list[chess.Square]) -> chess.Square | None:
+def get_king_square(board: chess.Board, squares: list[chess.Square]) -> chess.Square:
     result = [square for square in squares if hw.mask[square] == 0 and board.piece_at(square).piece_type == chess.KING]
     return result[0] if len(result) == 1 else None
 
 
-def get_king_square_after_castling(squares: list[chess.Square]) -> chess.Square | None:
+def get_king_square_after_castling(squares: list[chess.Square]) -> chess.Square:
     result = [square for square in squares if hw.mask[square] == 1 and square in TARGET_CASTLING_SQUARES]
     return result[0] if len(result) == 1 else None

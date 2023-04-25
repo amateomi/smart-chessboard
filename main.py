@@ -11,8 +11,8 @@ from state.user_move import user_move
 
 
 def main():
-    move: chess.Move | None = None
-    capture_info: CaptureInfo | None = None
+    move: chess.Move = None
+    capture_info: CaptureInfo = None
     board = chess.Board()
     state = State.START
     while True:
