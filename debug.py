@@ -22,21 +22,20 @@ def update_board(board_to_draw: chess.Board):
     print(f"\n  {' '.join(chess.FILE_NAMES)}")
     move = input("Enter move (a|m|e|c <source> <target> <enemy pawn spot>|<rook spot> <new rook spot>):")
     parts = move.split(" ")
-    match parts[0]:
-        case "a":
-            board[chess.parse_square(parts[1])] = 0
-        case "m":
-            board[chess.parse_square(parts[1])] = 0
-            board[chess.parse_square(parts[2])] = 1
-        case "e":
-            board[chess.parse_square(parts[1])] = 0
-            board[chess.parse_square(parts[2])] = 1
-            board[chess.parse_square(parts[3])] = 0
-        case "c":
-            board[chess.parse_square(parts[1])] = 0
-            board[chess.parse_square(parts[2])] = 1
-            board[chess.parse_square(parts[3])] = 0
-            board[chess.parse_square(parts[4])] = 1
+    if parts[0] == "a":
+        board[chess.parse_square(parts[1])] = 0
+    elif parts[0] == "m":
+        board[chess.parse_square(parts[1])] = 0
+        board[chess.parse_square(parts[2])] = 1
+    elif parts[0] == "e":
+        board[chess.parse_square(parts[1])] = 0
+        board[chess.parse_square(parts[2])] = 1
+        board[chess.parse_square(parts[3])] = 0
+    elif parts[0] == "c":
+        board[chess.parse_square(parts[1])] = 0
+        board[chess.parse_square(parts[2])] = 1
+        board[chess.parse_square(parts[3])] = 0
+        board[chess.parse_square(parts[4])] = 1
 
 
 def pick_attacks() -> list[chess.Square]:
