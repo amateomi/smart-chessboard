@@ -1,8 +1,8 @@
+import time
 from dataclasses import dataclass
 
 import chess
 
-import debug
 import hardware_interaction as hw
 from state.state_machine import State
 
@@ -23,24 +23,33 @@ def select_capture(capture_info: CaptureInfo) -> tuple[State, chess.Move]:
     global is_target_selected
     global move
     if not is_target_selected:
-        print("Pick up moved piece and press the move button")
+        hw.print_to_display(["Pick up moved piece", "Press MOVE button"])
         if hw.is_move_button_pressed():
             hw.update_mask()
-            # TODO: On real board
-            # changed_squares = get_changed_squares(mask, mask_stable)
-            changed_squares = debug.pick_attacks()
-            print(changed_squares)
+            print("Mask:")
+            hw.print_mask()
+            changed_squares = hw.get_changed_squares()
+            print(f"Changed squares: {[chess.square_name(s) for s in changed_squares]}")
             target_square = get_target_square(changed_squares, capture_info)
             if target_square:
                 move = chess.Move(capture_info.source_square, target_square)
+                print(f"Move: {move}")
                 is_target_selected = True
+            else:
+                hw.print_to_display(["Invalid target"])
+                time.sleep(1)
     else:
-        print("Put down moved piece and press the move button")
+        hw.print_to_display(["Put down moved piece", "Press MOVE button"])
         if hw.is_move_button_pressed():
             hw.update_mask()
+            print("Mask:")
+            hw.print_mask()
             if hw.mask == capture_info.mask:
                 is_target_selected = False
                 return State.MOVE_PROCESS, move
+            else:
+                hw.print_to_display(["Different mask"])
+                time.sleep(1)
     return State.SELECT_CAPTURE, None
 
 

@@ -9,7 +9,7 @@ pawn_promotion_index = 0  # Used for indexing in PAWN_PROMOTION_STRING_OPTIONS a
 
 def pawn_promotion(move: chess.Move) -> tuple[State, chess.Move]:
     global pawn_promotion_index
-    print(f"Select piece {PAWN_PROMOTION_STRING_OPTIONS[pawn_promotion_index]}?")
+    hw.print_to_display(["Select piece:", f"{PAWN_PROMOTION_STRING_OPTIONS[pawn_promotion_index]}"])
     if hw.is_select_button_pressed():
         move.promotion = PAWN_PROMOTION_OPTIONS[pawn_promotion_index]
         pawn_promotion_index = 0

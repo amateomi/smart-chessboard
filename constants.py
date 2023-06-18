@@ -41,3 +41,16 @@ PAWN_PROMOTION_MOVES = [Move.from_uci("a7a8"),
 
 PAWN_PROMOTION_STRING_OPTIONS = ["Queen", "Rook", "Bishop", "Knight"]  # Used to print options to player
 PAWN_PROMOTION_OPTIONS: list[Piece] = [QUEEN, ROOK, BISHOP, KNIGHT]  # Used to set promotion for a move
+
+PIN_MUX_OUT = 24
+PINS_MUX_ADDR = [17, 27, 22, 5, 6, 13]
+
+PIN_START_BUTTON = 14
+
+PIN_MOVE_BUTTON = 15
+
+PIN_SELECT_BUTTON = 16
+PIN_LEFT_BUTTON = 20
+PIN_RIGHT_BUTTON = 21
+
+DISPLAY_CHANK_SIZE = 20

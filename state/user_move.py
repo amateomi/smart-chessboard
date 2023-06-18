@@ -1,6 +1,7 @@
+import time
+
 import chess
 
-import debug
 import hardware_interaction as hw
 from constants import TARGET_CASTLING_SQUARES
 from state.select_capture import CaptureInfo
@@ -8,21 +9,26 @@ from state.state_machine import State
 
 
 def user_move(board: chess.Board) -> tuple[State, chess.Move, CaptureInfo]:
-    debug.update_board(board)
+    hw.print_to_display(["Make your move", "Press MOVE button"])
     if hw.is_move_button_pressed():
         hw.update_mask()
+        print("Mask:")
+        hw.print_mask()
         changed_squares = hw.get_changed_squares()
-        print(changed_squares)
+        print(f"Changed squares: {[chess.square_name(s) for s in changed_squares]}")
         move_or_attacked_squares = get_move_or_attacked_squares(board, changed_squares)
         if isinstance(move_or_attacked_squares, list):  # Capture
-            print(f"{changed_squares[0]} -> {move_or_attacked_squares}")
+            print(f"Capture: {changed_squares[0]} -> {move_or_attacked_squares}")
+            hw.update_mask_stable()
             return State.SELECT_CAPTURE, None, CaptureInfo(source_square=changed_squares[0],
                                                            attacked_squares=move_or_attacked_squares,
                                                            mask=hw.mask.copy())
         elif isinstance(move_or_attacked_squares, chess.Move):  # Move
+            print(f"Move: {move_or_attacked_squares}")
             return State.MOVE_PROCESS, move_or_attacked_squares, None
         else:
-            print("Not even a move")
+            hw.print_to_display(["Unknown action"])
+            time.sleep(1)
     return State.USER_MOVE, None, None
 
 

@@ -1,3 +1,5 @@
+import time
+
 import chess
 
 import hardware_interaction as hw
@@ -10,16 +12,20 @@ def move_process(board: chess.Board, move: chess.Move) -> State:
         if is_valid_player_pawn_promotion(board, move):
             return State.PAWN_PROMOTION
         else:
-            print(f"{move} is invalid promotion")
+            hw.print_to_display([f"MOVE: {move}", "Invalid promotion"])
+            time.sleep(1)
             return State.USER_MOVE
     elif move in board.legal_moves:
+        hw.print_to_display([f"Move: {move}", "Completed!"])
+        time.sleep(1)
         board.push(move)
         hw.update_mask_stable()
         return State.GAME_OVER_CHECK
     else:
-        print(f"{move} is invalid move")
         if board.turn == chess.BLACK:
             raise "Chess engine made invalid move"
+        hw.print_to_display([f"MOVE: {move}", "Invalid move"])
+        time.sleep(1)
         return State.USER_MOVE
 
 

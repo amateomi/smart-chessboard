@@ -1,5 +1,6 @@
 import chess
 
+import hardware_interaction as hw
 from state.ai_move import ai_move
 from state.game_over_check import game_over_check
 from state.move_process import move_process
@@ -11,6 +12,7 @@ from state.user_move import user_move
 
 
 def main():
+    hw.setup()
     move: chess.Move = None
     capture_info: CaptureInfo = None
     board = chess.Board()
